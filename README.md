@@ -1,6 +1,11 @@
 # dashcam_app
 
-A new Flutter project.
+A new Flutter project for a dashcam app for Android,
+
+
+Main Reference: https://blog.logrocket.com/flutter-camera-plugin-deep-dive-with-examples/#video-recording
+
+Github Reference: https://github.com/sbis04/flutter_camera_demo/tree/main
 
 ## Getting Started
 
