@@ -93,7 +93,7 @@ class _DashCamScreenState extends State<DashCamScreen> with WidgetsBindingObserv
   void initState() {
 
     //Hide the system status bar
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.leanBack);
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
     onNewCameraSelected(cameraList[0]);
     super.initState();
     
@@ -187,8 +187,46 @@ class _DashCamScreenState extends State<DashCamScreen> with WidgetsBindingObserv
   Widget build(BuildContext context) {
 
     return Scaffold(
+      backgroundColor: Colors.black,
+      body: _isCameraInitialized ? Column(
+        children:[
+          AspectRatio(aspectRatio: 1 / controller!.value.aspectRatio, child: Stack(children: [controller!.buildPreview(),
+          Padding(padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.end, 
+                          children: [
+                              Align(alignment: Alignment.topRight,
+                              child: Container(decoration: BoxDecoration(color: Colors.black87, borderRadius: BorderRadius.circular(10),),
+                                      child: Padding(padding: const EdgeInsets.only(left: 8, right: 8),
+                                              child: DropdownButton<ResolutionPreset>(
+                                                dropdownColor: Colors.black87,
+                                                underline: Container(),
+                                                value: currentPreset,
+                                                items: [for (ResolutionPreset preset in ResolutionPreset.values) 
+                                                            DropdownMenuItem(value: preset,
+                                                                            child: Text(preset.toString().split('.')[1].toUpperCase(),
+                                                                                    style: TextStyle(color: Colors.white), )
+                                                                                    )],
+                                                onChanged: (value){setState((){
+                                                                   currentPreset = value!;
+                                                                   _isCameraInitialized = false;});
+                                                                    onNewCameraSelected(controller!.description);
+                                                },
+                                                hint: Text('Select preset'),
+                                              ),
+                                            ),
+                                        ),
+                                    ), 
+                          ]),
+          ),
 
-      body: _isCameraInitialized ? AspectRatio(aspectRatio: 1 / controller!.value.aspectRatio, child: controller!.buildPreview()) : Container(),
+          ])),
+          
+        ]
+      ) : Container()
+      
+      
+      
+      
 
     );
   }
