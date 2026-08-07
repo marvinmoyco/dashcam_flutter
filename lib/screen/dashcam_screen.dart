@@ -1,13 +1,14 @@
+import 'dart:async';
+
 import 'package:flutter/services.dart';
 
 import '../../main.dart';
+import '../../recorder.dart';
 
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:gal/gal.dart';
-import 'dart:io';
-import 'package:path/path.dart' as path;
-import 'package:intl/intl.dart';
+
 
 /// DashCamScreen is the Main Application.
 class DashCamScreen extends StatefulWidget {
@@ -25,7 +26,7 @@ class _DashCamScreenState extends State<DashCamScreen> with WidgetsBindingObserv
   late Future<void> _initializeControllerFuture;
   bool _isRecording = false;
   ResolutionPreset currentPreset = ResolutionPreset.high;
-
+  Recorder recorder = Recorder();
   
 
   void onNewCameraSelected(CameraDescription camDesc) async {
@@ -86,6 +87,10 @@ class _DashCamScreenState extends State<DashCamScreen> with WidgetsBindingObserv
     if(mounted){
       setState(() => _isCameraInitialized = controller!.value.isInitialized);
     }
+
+
+    //Set the zoom level to the ultra wide angle if available
+    await camController.setZoomLevel(await camController.getMinZoomLevel());
   }
 
 
@@ -127,14 +132,11 @@ class _DashCamScreenState extends State<DashCamScreen> with WidgetsBindingObserv
       //Stop recording 
       if(_isRecording)
       {
-        String? albumName = "DashCam_Recordings";
-        XFile recordedFile = await renameRecording(await controller!.stopVideoRecording(),"Rear");
-        //Save to gallery
-        await Gal.putVideo(recordedFile.path, album: albumName);
+        recorder.endRecording(controller!.stopVideoRecording(), "Rear");
         setState(() => _isRecording = false);
         //Print where the file is saved
-        debugPrint("Video saved to: ${recordedFile.path}");
-
+        debugPrint("Video saved to: ${recorder.recordedFile.path}");
+        Timer();
       }
       //Start recording
       else{
@@ -149,26 +151,7 @@ class _DashCamScreenState extends State<DashCamScreen> with WidgetsBindingObserv
   }
 
 
-  Future<XFile> renameRecording(XFile initialVideo, String cameraType) async {
-    
-    //Convert XFile to File class to rename it
-    File origFile = File(initialVideo.path);
-
-    //Get the timestamp and file extension
-    String formattedDateTime = DateFormat('yyyyMMdd_hhmmss').format(DateTime.now());
-    String fileExtension = path.extension(initialVideo.path);
-    
-    //Create a new string combining all the extracted info
-    String newFileName = '${formattedDateTime}_$cameraType$fileExtension';
-    String newFilePath = path.join(path.dirname(initialVideo.path), newFileName);
-
-    //Rename the file
-    File renamedFile = await origFile.rename(newFilePath);
-
-    //Return the renamed file as an XFile
-    return XFile(renamedFile.path);
-
-  }
+  
 
   void showSnackbar() {
     final context = navigatorKey.currentContext;
