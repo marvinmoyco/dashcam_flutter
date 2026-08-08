@@ -7,7 +7,6 @@ import '../../recorder.dart';
 
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
-import 'package:gal/gal.dart';
 
 
 /// DashCamScreen is the Main Application.
@@ -140,39 +139,12 @@ class _DashCamScreenState extends State<DashCamScreen> with WidgetsBindingObserv
     if(state == AppLifecycleState.inactive){ camController.dispose(); }
     else if(state == AppLifecycleState.resumed){ onNewCameraSelected(camController.description); }
 
-
-      
-
   }
 
   @override
   void dispose() {
     controller?.dispose();
     super.dispose();
-  }
-
-  Future<void> toggleRecording() async{
-    try{
-      
-    }
-    catch(e){
-      debugPrint("Ërror recording: $e");
-    }
-  }
-
-
-  
-
-  void showSnackbar() {
-    final context = navigatorKey.currentContext;
-    if (context == null || !context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: const Text('Saved! ✅'),
-      action: SnackBarAction(
-        label: 'Gallery ->',
-        onPressed: () async => Gal.open(),
-      ),
-    ));
   }
 
   

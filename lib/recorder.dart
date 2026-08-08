@@ -128,16 +128,14 @@ class Recorder{
           endRecording(originalFile, "Rear");
         }
         
-
+        //Show the notification
         toastification.show(
           type: ToastificationType.info,
           style: ToastificationStyle.flat,
-          title: Text('Hello, world!'),
+          title: Text('Recording Notification'),
           autoCloseDuration: const Duration(seconds: 5),
           description: Text('Saved ${recordedFile.name}'),
           alignment: Alignment.bottomCenter,
-
-          
           );
         
 
