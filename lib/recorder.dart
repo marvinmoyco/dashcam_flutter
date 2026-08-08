@@ -7,19 +7,19 @@ import 'dart:io';
 import 'package:path/path.dart' as path;
 import 'package:intl/intl.dart';
 import 'package:camera/camera.dart';
-import 'package:flutter/foundation.dart';
 import 'package:toastification/toastification.dart';
 import 'package:flutter/material.dart';
 
 class Recorder{
   late DateTime startTimeStamp;
   late DateTime endTimeStamp;
-  Duration loopTime = Duration(seconds: 10);
-  Stopwatch timer = Stopwatch();
+  Duration loopTime = Duration(minutes: 3);
   late XFile recordedFile;
   String albumName = "DashCam_Recordings";
   late Timer recordingTimer;
   bool isRecording = false;
+  final List<Future<void>> pendingSaves = [];
+
   //Constructor
   Recorder();
   
@@ -49,16 +49,21 @@ class Recorder{
 
   }
 
-  void endRecording(XFile videoFile, String camType) async
+  void queueSave(XFile videoFile, String camType)
   {
-    //Update endTimeStamp and end stopwatch
-    endTimeStamp = DateTime.now();
-    if(timer.isRunning)
-    {
-      timer.stop();
-      
-    }
-      
+    final newSave = endRecording(videoFile, camType);
+    pendingSaves.add(newSave);
+    newSave.whenComplete(() => pendingSaves.remove(newSave));
+  }
+
+  Future<void> cleanup() async
+  {
+    recordingTimer.cancel();
+    await Future.wait(pendingSaves);
+  }
+  Future<void> endRecording(XFile videoFile, String camType) async
+  {
+
     //Rename the video file
     recordedFile = await renameRecording( videoFile,camType );
     try{
@@ -77,6 +82,16 @@ class Recorder{
         {
           await oldFile.delete();
         }
+
+        //Show the notification
+        toastification.show(
+          type: ToastificationType.info,
+          style: ToastificationStyle.flat,
+          title: Text('Recording Notification'),
+          autoCloseDuration: const Duration(seconds: 5),
+          description: Text('Saved ${recordedFile.name}'),
+          alignment: Alignment.bottomCenter,
+          );
 
       }
     }
@@ -103,7 +118,9 @@ class Recorder{
         {
           //Save the recording
           XFile originalFile = await camController.stopVideoRecording();
-          endRecording(originalFile, "Rear"); 
+          //Update endTimeStamp and end stopwatch
+          endTimeStamp = DateTime.now();
+          queueSave(originalFile, "Rear"); 
         }
         
       }
@@ -125,18 +142,14 @@ class Recorder{
         {
           //End the recording
           XFile originalFile = await camController.stopVideoRecording();
-          endRecording(originalFile, "Rear");
+          //Update endTimeStamp and end stopwatch
+          endTimeStamp = DateTime.now();
+          queueSave(originalFile, "Rear"); 
+
+          
         }
         
-        //Show the notification
-        toastification.show(
-          type: ToastificationType.info,
-          style: ToastificationStyle.flat,
-          title: Text('Recording Notification'),
-          autoCloseDuration: const Duration(seconds: 5),
-          description: Text('Saved ${recordedFile.name}'),
-          alignment: Alignment.bottomCenter,
-          );
+        
         
 
         //Start the recording

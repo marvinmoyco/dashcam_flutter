@@ -8,7 +8,6 @@ import '../../recorder.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 
-
 /// DashCamScreen is the Main Application.
 class DashCamScreen extends StatefulWidget {
   /// Default Constructor
@@ -26,7 +25,16 @@ class _DashCamScreenState extends State<DashCamScreen> with WidgetsBindingObserv
   ResolutionPreset currentPreset = ResolutionPreset.high;
   Recorder recorder = Recorder();
   Map<ResolutionPreset, String> resolutionPresets = {};
+  Duration selectedDuration = Duration(minutes: 3);
+  bool tonalSelected = false;
+  late bool showSettingDrawer;
+  final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
 
+  void openDrawer()
+  {
+    scaffoldKey.currentState?.openEndDrawer();
+    //setState(() => tonalSelected = !tonalSelected);
+  }
   void onNewCameraSelected(CameraDescription camDesc) async {
     final prevCamController = controller;
     if (resolutionPresets.isEmpty)
@@ -138,30 +146,36 @@ class _DashCamScreenState extends State<DashCamScreen> with WidgetsBindingObserv
 
     if(state == AppLifecycleState.inactive){ camController.dispose(); }
     else if(state == AppLifecycleState.resumed){ onNewCameraSelected(camController.description); }
-
+    super.didChangeAppLifecycleState(state);
   }
 
   @override
   void dispose() {
+    recorder.cleanup();
     controller?.dispose();
     super.dispose();
   }
 
-  
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    showSettingDrawer = MediaQuery.widthOf(context) >= 450;
+  }
   @override
   Widget build(BuildContext context) {
 
     return Scaffold(
+      key: scaffoldKey,
       backgroundColor: Colors.black,
       body: _isCameraInitialized ? Column(
         children:[
           AspectRatio(aspectRatio: 1 / controller!.value.aspectRatio, child: Stack(children: [controller!.buildPreview(),
-          Padding(padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-            child: Column(crossAxisAlignment: CrossAxisAlignment.end, 
-                          children: [
-                              Align(alignment: Alignment.topRight,
-                              child: Container(decoration: BoxDecoration(color: Colors.black87, borderRadius: BorderRadius.circular(10),),
-                                      child: Padding(padding: const EdgeInsets.only(left: 8, right: 8),
+          Padding(padding: const EdgeInsets.fromLTRB(16, 8, 8, 8),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.center, 
+                          children: [Row( mainAxisAlignment: .spaceBetween,
+                              children:[Align(alignment: Alignment.topLeft,
+                              child: Container(decoration: BoxDecoration(color: Colors.black45, borderRadius: BorderRadius.circular(10),),
+                                      child: Padding(padding: const EdgeInsets.only(left: 8, right: 5),
                                               child: DropdownButton<ResolutionPreset>(
                                                 dropdownColor: Colors.black87,
                                                 underline: Container(),
@@ -180,8 +194,16 @@ class _DashCamScreenState extends State<DashCamScreen> with WidgetsBindingObserv
                                               ),
                                             ),
                                         ),
-                                    ), 
-                          ]),
+                                    ),
+                              Align(alignment: Alignment.topRight,
+                              child: IconButton.filled(
+                                isSelected: tonalSelected,
+                                icon: const Icon(Icons.settings_outlined),
+                                selectedIcon: const Icon(Icons.settings),
+                                onPressed: openDrawer,
+                              ))
+             
+          ])]),
           ),
 
           ])),
@@ -189,13 +211,51 @@ class _DashCamScreenState extends State<DashCamScreen> with WidgetsBindingObserv
           Row(children: [Expanded(child: Padding(padding: const EdgeInsets.only(left: 8, right: 4),
                             child: TextButton(onPressed: () {recorder.toggleLoopRecording(controller);}, 
                             style: TextButton.styleFrom(foregroundColor: !recorder.isRecording ? Colors.black : Colors.grey, backgroundColor: !recorder.isRecording ? Colors.white : Colors.white30),
-                            child: Text('Toggle Loop Recording'))))]),
-          
+                            child: Text('Toggle Loop Recording', style: TextStyle(color: Colors.deepPurple)))))]),
+          Row(children: [ Expanded(child: Column( children: [ Text('Loop Recording Duration (minutes)', style: TextStyle(color: Colors.white)),
+                          SegmentedButton<Duration>( style: SegmentedButton.styleFrom( backgroundColor: Colors.white, foregroundColor: Colors.deepPurple, selectedBackgroundColor: Colors.white30, selectedForegroundColor: Colors.amber),
+                          segments: <ButtonSegment<Duration>>[
+                            ButtonSegment<Duration>(value: Duration(seconds: 30), label: Text('.5'), enabled: !recorder.isRecording),
+                            ButtonSegment<Duration>(value: Duration(minutes: 1), label: Text('1'), enabled: !recorder.isRecording),
+                            ButtonSegment<Duration>(value: Duration(minutes: 2), label: Text('2'), enabled: !recorder.isRecording),
+                            ButtonSegment<Duration>(value: Duration(minutes: 3), label: Text('3'), enabled: !recorder.isRecording),
+                            ButtonSegment<Duration>(value: Duration(minutes: 4), label: Text('4'), enabled: !recorder.isRecording),
+                            ButtonSegment<Duration>(value: Duration(minutes: 5), label: Text('5'), enabled: !recorder.isRecording),
+                          ],
+                          selected: <Duration>{selectedDuration},
+                          onSelectionChanged: (Set<Duration> newSelection) {
+
+                              setState(() {
+                                debugPrint('recorder.isRecording: ${recorder.isRecording}');
+                                if(!recorder.isRecording)
+                                {
+                                  debugPrint('BEFORE CHANGING VALUES');
+                                  debugPrint('newSelection: ${newSelection.first.inSeconds} seconds | loopTime: ${recorder.loopTime.inSeconds} seconds | selectedDuration: ${selectedDuration.inSeconds} seconds');
+                                  recorder.loopTime = newSelection.first;
+                                  selectedDuration = newSelection.first;
+                                  debugPrint('After CHANGING VALUES');
+                                  debugPrint('newSelection: ${newSelection.first.inSeconds} seconds | loopTime: ${recorder.loopTime.inSeconds} seconds | selectedDuration: ${selectedDuration.inSeconds} seconds');
+                                  
+                                }
+                                
+                              });
+                                
+                            
+                          },),
+                          ]))
+          ]),
         ]
-      ) : Container()
+      ) : Container(),
+      endDrawer: NavigationDrawer(
+
+        children:<Widget>[
+          Padding(padding: .fromLTRB(28,16,16, 10), child: null),
+          NavigationDrawerDestination(icon: Icon(Icons.settings), label: Text("Settings")),
+          Padding(padding: .fromLTRB(28, 16, 28, 10), child: Divider()),
+          //Place settings here
+        ]),
       
-      
-      
+  
       
 
     );
