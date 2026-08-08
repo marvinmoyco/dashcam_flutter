@@ -39,6 +39,7 @@ dependencies:
   path: ^1.9.1
   gal: ^2.3.3
   intl: ^0.20.3
+  toastification: ^3.2.0
 
 dev_dependencies:
   flutter_test:

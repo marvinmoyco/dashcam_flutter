@@ -2,6 +2,7 @@ import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 
 import '../screen/dashcam_screen.dart';
+import 'package:toastification/toastification.dart';
 
 final navigatorKey = GlobalKey<NavigatorState>();
 late List<CameraDescription> cameraList;
@@ -27,11 +28,11 @@ class DashCamApp extends StatelessWidget{
 
   @override
   Widget build(BuildContext context){
-    return MaterialApp(
+    return ToastificationWrapper(child: MaterialApp(
       title: 'DashCam',
       theme: ThemeData(primarySwatch: Colors.purple),
       home: DashCamScreen(),
 
-    );
+    ));
   }
 }

@@ -24,27 +24,53 @@ class _DashCamScreenState extends State<DashCamScreen> with WidgetsBindingObserv
   CameraController? controller;
   bool _isCameraInitialized = false;
   late Future<void> _initializeControllerFuture;
-  bool _isRecording = false;
   ResolutionPreset currentPreset = ResolutionPreset.high;
   Recorder recorder = Recorder();
-  
+  Map<ResolutionPreset, String> resolutionPresets = {};
 
   void onNewCameraSelected(CameraDescription camDesc) async {
     final prevCamController = controller;
+    if (resolutionPresets.isEmpty)
+    {
+      for(ResolutionPreset preset in ResolutionPreset.values)
+      {
+        if(preset == ResolutionPreset.low)
+        {
+          resolutionPresets[preset] = "240p";
+        }
+        else if(preset == ResolutionPreset.medium)
+        {
+          resolutionPresets[preset] = "480p";
+        }
+        else if(preset == ResolutionPreset.high)
+        {
+          resolutionPresets[preset] = "720p";
+        }
+        else if(preset == ResolutionPreset.veryHigh)
+        {
+          resolutionPresets[preset] = "1080p";
+        }
+        else if(preset == ResolutionPreset.ultraHigh)
+        {
+          resolutionPresets[preset] = "2160p";
+        }
+        else{
+          resolutionPresets[preset] = "max";
+        }
+      }
+    }
+    
     DropdownButton<ResolutionPreset>(
       dropdownColor: Colors.black87,
       underline: Container(),
       value: currentPreset,
       items: [
         for (ResolutionPreset preset
-            in ResolutionPreset.values)
+            in resolutionPresets.keys)
           DropdownMenuItem(
             value: preset,
             child: Text(
-              preset
-                  .toString()
-                  .split('.')[1]
-                  .toUpperCase(),
+              resolutionPresets[preset]!,
               style:
                   TextStyle(color: Colors.white),
             ),
@@ -127,23 +153,7 @@ class _DashCamScreenState extends State<DashCamScreen> with WidgetsBindingObserv
 
   Future<void> toggleRecording() async{
     try{
-      await _initializeControllerFuture;
-
-      //Stop recording 
-      if(_isRecording)
-      {
-        recorder.endRecording(controller!.stopVideoRecording(), "Rear");
-        setState(() => _isRecording = false);
-        //Print where the file is saved
-        debugPrint("Video saved to: ${recorder.recordedFile.path}");
-        Timer();
-      }
-      //Start recording
-      else{
-
-        await controller!.startVideoRecording();
-        setState(() => _isRecording=true);
-      }
+      
     }
     catch(e){
       debugPrint("Ërror recording: $e");
@@ -184,9 +194,9 @@ class _DashCamScreenState extends State<DashCamScreen> with WidgetsBindingObserv
                                                 dropdownColor: Colors.black87,
                                                 underline: Container(),
                                                 value: currentPreset,
-                                                items: [for (ResolutionPreset preset in ResolutionPreset.values) 
+                                                items: [for (ResolutionPreset preset in resolutionPresets.keys) 
                                                             DropdownMenuItem(value: preset,
-                                                                            child: Text(preset.toString().split('.')[1].toUpperCase(),
+                                                                            child: Text(resolutionPresets[preset]!,
                                                                                     style: TextStyle(color: Colors.white), )
                                                                                     )],
                                                 onChanged: (value){setState((){
@@ -203,6 +213,11 @@ class _DashCamScreenState extends State<DashCamScreen> with WidgetsBindingObserv
           ),
 
           ])),
+
+          Row(children: [Expanded(child: Padding(padding: const EdgeInsets.only(left: 8, right: 4),
+                            child: TextButton(onPressed: () {recorder.toggleLoopRecording(controller);}, 
+                            style: TextButton.styleFrom(foregroundColor: !recorder.isRecording ? Colors.black : Colors.grey, backgroundColor: !recorder.isRecording ? Colors.white : Colors.white30),
+                            child: Text('Toggle Loop Recording'))))]),
           
         ]
       ) : Container()
