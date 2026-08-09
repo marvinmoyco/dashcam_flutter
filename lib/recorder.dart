@@ -24,7 +24,7 @@ class Recorder{
   StorageInfo storageInfo = StorageInfo();
   Settings settings = Settings();
 
-  
+
   //Constructor
   Recorder();
   
@@ -76,30 +76,37 @@ class Recorder{
       //Recompile using ffmpeg to insert timestamp in each frame
       //TODO SOON
 
-      if(await Gal.hasAccess())
-      {
-        //await Future.delayed(const Duration(seconds:3));
-        //Copy the recorded file to the Gallery (DCIM folder)
-        await Gal.putVideo(recordedFile.path,album: albumName);
-
-        //Delete the old file (in the internal folder) to prevent wasted space
-        File oldFile = File(recordedFile.path);
-        if( await oldFile.exists())
-        {
-          await oldFile.delete();
-        }
-
-        //Show the notification
-        toastification.show(
-          type: ToastificationType.info,
-          style: ToastificationStyle.flat,
-          title: Text('Recording Notification'),
-          autoCloseDuration: const Duration(seconds: 5),
-          description: Text('Saved ${recordedFile.name}'),
-          alignment: Alignment.bottomCenter,
-          );
+      if(settings.useExtStorage)
+      { //use dart:io for external storage (SD card)
 
       }
+      else{ //Use Gal for internal gallery
+        if(await Gal.hasAccess())
+        {
+          //await Future.delayed(const Duration(seconds:3));
+          //Copy the recorded file to the Gallery (DCIM folder)
+          await Gal.putVideo(recordedFile.path,album: albumName);
+
+          //Delete the old file (in the internal folder) to prevent wasted space
+          File oldFile = File(recordedFile.path);
+          if( await oldFile.exists())
+          {
+            await oldFile.delete();
+          }
+        }
+      }
+      
+      //Show the notification
+      toastification.show(
+        type: ToastificationType.info,
+        style: ToastificationStyle.flat,
+        title: Text('Recording Notification'),
+        autoCloseDuration: const Duration(seconds: 5),
+        description: Text('Saved ${recordedFile.name}'),
+        alignment: Alignment.bottomCenter,
+        );
+
+      
     }
     on GalException catch (e)
     {

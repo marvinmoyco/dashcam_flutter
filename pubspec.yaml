@@ -43,7 +43,8 @@ dependencies:
   photo_manager: ^3.11.0
   disk_space_2: ^1.0.13
   shared_preferences: ^2.5.5
-
+  get_storage_info: ^0.6.0
+  ffmpeg_kit_flutter_new: ^4.6.2
 dev_dependencies:
   flutter_test:
     sdk: flutter

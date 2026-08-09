@@ -1,12 +1,13 @@
 import 'dart:async';
 
 import 'package:flutter/services.dart';
-
+import 'dart:io';
 import '../../main.dart';
 import '../../recorder.dart';
-
+import 'package:path_provider/path_provider.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:toastification/toastification.dart';
 
 /// DashCamScreen is the Main Application.
 class DashCamScreen extends StatefulWidget {
@@ -245,6 +246,45 @@ class _DashCamScreenState extends State<DashCamScreen> with WidgetsBindingObserv
             recorder.settings.runInBackground = newVal;
             recorder.settings.setParameter("enable_running_in_background", recorder.settings.runInBackground);
           });},) ])),
+          Padding(padding: .fromLTRB(28,10,16, 10), child: Row(children:[Text('Save to Ext. Storage: '), Switch(value: recorder.settings.useExtStorage, onChanged: (bool newVal){setState(()
+          {
+            if(newVal == true && Platform.isAndroid)
+            {
+              //Check here if SD card is detected (Updates useExtStorage in Settings)
+              recorder.settings.isExtStoragePresent();
+              //Show toastification if SD card is missing
+              if(recorder.settings.useExtStorage == false)
+              {
+                //Show the notification
+                toastification.show(
+                  type: ToastificationType.error,
+                  style: ToastificationStyle.flat,
+                  title: Text('Settings Notification'),
+                  autoCloseDuration: const Duration(seconds: 8),
+                  description: Text('External Storage (SD Card) is not detected.'),
+                  alignment: Alignment.bottomCenter,
+                  );
+              }
+
+            }
+            else if(newVal == true && Platform.isIOS)
+            {
+              //Show the notification
+                toastification.show(
+                  type: ToastificationType.error,
+                  style: ToastificationStyle.flat,
+                  title: Text('Settings Notification'),
+                  autoCloseDuration: const Duration(seconds: 8),
+                  description: Text('This feature is only available in Android.'),
+                  alignment: Alignment.bottomCenter,
+                  );
+            }
+            else{
+              recorder.settings.useExtStorage = newVal;
+            }
+            recorder.settings.setParameter("use_external_storage", recorder.settings.useExtStorage);
+            
+          });}) ])),
         ]),
       
   

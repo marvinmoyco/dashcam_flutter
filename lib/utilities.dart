@@ -1,7 +1,7 @@
 import 'package:disk_space_2/disk_space_2.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:io';
-
+import 'package:path_provider/path_provider.dart';
 
 class StorageInfo
 {
@@ -60,7 +60,8 @@ class Settings{
   double recordingStorageLimit = 0;
   bool runInBackground = false;
   SharedPreferencesAsync prefs = SharedPreferencesAsync();
-
+  bool useExtStorage = false; //SD Card
+  Directory extStoragePath = Directory("");
 
   void initializeSettings() async
   {
@@ -72,6 +73,11 @@ class Settings{
 
 
     if(await prefs.containsKey("enable_running_in_background"))
+    {
+      runInBackground = await prefs.getBool("enable_running_in_background") ?? false;
+    }
+
+    if(await prefs.containsKey("use_external_storage"))
     {
       runInBackground = await prefs.getBool("enable_running_in_background") ?? false;
     }
@@ -88,6 +94,10 @@ class Settings{
     {
       await prefs.setBool("enable_running_in_background", (value as bool));
     }
+    else if(key == "use_external_storage" && value is bool )
+    {
+      await prefs.setBool("use_external_storage", (value as bool));
+    }
   }
 
   Future<T> getParameter<T>(String key) async{
@@ -99,9 +109,53 @@ class Settings{
     {
       return await prefs.getBool("enable_running_in_background") as T;
     }
+    else if(key == "use_external_storage" )
+    {
+      return await prefs.getBool("use_external_storage") as T;
+    }
     else{
       return false as T;
     }
+  }
+
+  void isExtStoragePresent() async
+  {
+    List<Directory>? directories = await getExternalStorageDirectories();
+
+    if(directories != null && directories.isNotEmpty)
+    {
+      for(Directory d in directories)
+      {
+        if(!d.path.contains('emulated') && !d.path.contains('/storage/self'))
+        {
+          if(await d.exists())
+          {
+            useExtStorage = true;
+          }
+        }
+      }
+    }
+    useExtStorage = false;
+  }
+
+  void getExtStoragePath() async
+  {
+    List<Directory>? directories = await getExternalStorageDirectories();
+
+    if(directories != null && directories.isNotEmpty)
+    {
+      for(Directory d in directories)
+      {
+        if(!d.path.contains('emulated') && !d.path.contains('/storage/self'))
+        {
+          if(await d.exists())
+          {
+            extStoragePath = d;
+          }
+        }
+      }
+    }
+
   }
 
 }
