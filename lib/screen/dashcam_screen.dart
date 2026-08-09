@@ -108,7 +108,7 @@ class _DashCamScreenState extends State<DashCamScreen> with WidgetsBindingObserv
     onNewCameraSelected(cameraList[0]);
     recorder.storageInfo.fetchStorageInfo();
 
-    
+    recorder.settings.initializeSettings();
 
     super.initState();
 
