@@ -1,7 +1,6 @@
 
 import 'dart:async';
 
-import 'main.dart';
 import 'package:gal/gal.dart';
 import 'dart:io';
 import 'package:path/path.dart' as path;
@@ -9,8 +8,11 @@ import 'package:intl/intl.dart';
 import 'package:camera/camera.dart';
 import 'package:toastification/toastification.dart';
 import 'package:flutter/material.dart';
+import 'utilities.dart';
+
 
 class Recorder{
+  //Initialize parameters
   late DateTime startTimeStamp;
   late DateTime endTimeStamp;
   Duration loopTime = Duration(minutes: 3);
@@ -19,7 +21,10 @@ class Recorder{
   late Timer recordingTimer;
   bool isRecording = false;
   final List<Future<void>> pendingSaves = [];
+  StorageInfo storageInfo = StorageInfo();
+  Settings settings = Settings();
 
+  
   //Constructor
   Recorder();
   
@@ -27,6 +32,7 @@ class Recorder{
   {
     albumName = newName;
   }
+
 
   Future<XFile> renameRecording(XFile initialVideo, String cameraType) async {
     
@@ -121,6 +127,9 @@ class Recorder{
           //Update endTimeStamp and end stopwatch
           endTimeStamp = DateTime.now();
           queueSave(originalFile, "Rear"); 
+
+          //Update storage info
+          storageInfo.fetchStorageInfo();
         }
         
       }
@@ -146,6 +155,8 @@ class Recorder{
           endTimeStamp = DateTime.now();
           queueSave(originalFile, "Rear"); 
 
+          //Update storage info
+          storageInfo.fetchStorageInfo();
           
         }
         
@@ -164,5 +175,8 @@ class Recorder{
     
   }
 
+  
+
 
 }
+

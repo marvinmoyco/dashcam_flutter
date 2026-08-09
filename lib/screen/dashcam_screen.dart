@@ -67,33 +67,6 @@ class _DashCamScreenState extends State<DashCamScreen> with WidgetsBindingObserv
       }
     }
     
-    DropdownButton<ResolutionPreset>(
-      dropdownColor: Colors.black87,
-      underline: Container(),
-      value: currentPreset,
-      items: [
-        for (ResolutionPreset preset
-            in resolutionPresets.keys)
-          DropdownMenuItem(
-            value: preset,
-            child: Text(
-              resolutionPresets[preset]!,
-              style:
-                  TextStyle(color: Colors.white),
-            ),
-          )
-      ],
-      onChanged: (value) {
-        setState(() {
-                value: currentPreset = value!;
-                _isCameraInitialized = false;
-        });
-        onNewCameraSelected(controller!.description);
-      },
-      hint: Text("Select item"),
-    );
-
-
 
 
     final CameraController camController = CameraController(camDesc, currentPreset, imageFormatGroup: ImageFormatGroup.jpeg);
@@ -133,10 +106,16 @@ class _DashCamScreenState extends State<DashCamScreen> with WidgetsBindingObserv
     //Hide the system status bar
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
     onNewCameraSelected(cameraList[0]);
+    recorder.storageInfo.fetchStorageInfo();
+
+    
+
     super.initState();
+
     
   }
 
+  
   @override
   void didChangeAppLifecycleState(AppLifecycleState state)
   {
@@ -253,6 +232,19 @@ class _DashCamScreenState extends State<DashCamScreen> with WidgetsBindingObserv
           NavigationDrawerDestination(icon: Icon(Icons.settings), label: Text("Settings")),
           Padding(padding: .fromLTRB(28, 16, 28, 10), child: Divider()),
           //Place settings here
+          Padding(padding: .fromLTRB(28,10,16, 10), child: Text('Storage Capacity: ${recorder.storageInfo.consumedSpace} GB of ${recorder.storageInfo.totalDiskSpace} GB used (${recorder.storageInfo.freeDiskSpace} GB free)')),
+          Padding(padding: .fromLTRB(28,10,16, 10), child: Text('Storage Limit: ${recorder.settings.recordingStorageLimit.toStringAsFixed(2)} GB')),
+          Slider(value: recorder.settings.recordingStorageLimit, min: 0, max: recorder.storageInfo.freeDiskSpace, label: recorder.settings.recordingStorageLimit.toStringAsFixed(2), onChanged: (double newVal){ setState(()
+          {
+            recorder.settings.recordingStorageLimit = newVal;
+            recorder.settings.setParameter("storage_limits", recorder.settings.recordingStorageLimit);
+            
+          }); }),
+          Padding(padding: .fromLTRB(28,10,16, 10), child: Row(children:[Text('Run in background: '), Switch(value: recorder.settings.runInBackground, onChanged: (bool newVal){setState(()
+          {
+            recorder.settings.runInBackground = newVal;
+            recorder.settings.setParameter("enable_running_in_background", recorder.settings.runInBackground);
+          });},) ])),
         ]),
       
   
