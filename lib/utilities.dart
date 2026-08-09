@@ -80,11 +80,11 @@ class Settings{
 
 
   void setParameter<T>(String key, T value) async{
-    if(key == "storage_limit" && value.runtimeType is double)
+    if(key == "storage_limit" && value is double)
     {
       await prefs.setDouble("storage_limit", (value as double));
     }
-    else if(key == "enable_running_in_background" && value.runtimeType is bool )
+    else if(key == "enable_running_in_background" && value is bool )
     {
       await prefs.setBool("enable_running_in_background", (value as bool));
     }

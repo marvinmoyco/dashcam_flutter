@@ -237,7 +237,7 @@ class _DashCamScreenState extends State<DashCamScreen> with WidgetsBindingObserv
           Slider(value: recorder.settings.recordingStorageLimit, min: 0, max: recorder.storageInfo.freeDiskSpace, label: recorder.settings.recordingStorageLimit.toStringAsFixed(2), onChanged: (double newVal){ setState(()
           {
             recorder.settings.recordingStorageLimit = newVal;
-            recorder.settings.setParameter("storage_limits", recorder.settings.recordingStorageLimit);
+            recorder.settings.setParameter("storage_limit", recorder.settings.recordingStorageLimit);
             
           }); }),
           Padding(padding: .fromLTRB(28,10,16, 10), child: Row(children:[Text('Run in background: '), Switch(value: recorder.settings.runInBackground, onChanged: (bool newVal){setState(()
