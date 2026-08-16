@@ -45,6 +45,9 @@ dependencies:
   shared_preferences: ^2.5.5
   get_storage_info: ^0.6.0
   ffmpeg_kit_flutter_new: ^4.6.2
+  flutter_background_service: ^5.1.0
+  geolocator: ^14.0.3
+  sensors_plus: ^7.1.0
 dev_dependencies:
   flutter_test:
     sdk: flutter

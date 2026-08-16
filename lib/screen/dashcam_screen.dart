@@ -26,7 +26,7 @@ class _DashCamScreenState extends State<DashCamScreen> with WidgetsBindingObserv
   ResolutionPreset currentPreset = ResolutionPreset.high;
   Recorder recorder = Recorder();
   Map<ResolutionPreset, String> resolutionPresets = {};
-  Duration selectedDuration = Duration(minutes: 3);
+  //Duration selectedDuration = Duration(minutes: 3);
   bool tonalSelected = false;
   late bool showSettingDrawer;
   final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
@@ -193,29 +193,32 @@ class _DashCamScreenState extends State<DashCamScreen> with WidgetsBindingObserv
                             style: TextButton.styleFrom(foregroundColor: !recorder.isRecording ? Colors.black : Colors.grey, backgroundColor: !recorder.isRecording ? Colors.white : Colors.white30),
                             child: Text('Toggle Loop Recording', style: TextStyle(color: Colors.deepPurple)))))]),
           Row(children: [ Expanded(child: Column( children: [ Text('Loop Recording Duration (minutes)', style: TextStyle(color: Colors.white)),
-                          SegmentedButton<Duration>( style: SegmentedButton.styleFrom( backgroundColor: Colors.white, foregroundColor: Colors.deepPurple, selectedBackgroundColor: Colors.white30, selectedForegroundColor: Colors.amber),
-                          segments: <ButtonSegment<Duration>>[
-                            ButtonSegment<Duration>(value: Duration(seconds: 30), label: Text('.5'), enabled: !recorder.isRecording),
-                            ButtonSegment<Duration>(value: Duration(minutes: 1), label: Text('1'), enabled: !recorder.isRecording),
-                            ButtonSegment<Duration>(value: Duration(minutes: 2), label: Text('2'), enabled: !recorder.isRecording),
-                            ButtonSegment<Duration>(value: Duration(minutes: 3), label: Text('3'), enabled: !recorder.isRecording),
-                            ButtonSegment<Duration>(value: Duration(minutes: 4), label: Text('4'), enabled: !recorder.isRecording),
-                            ButtonSegment<Duration>(value: Duration(minutes: 5), label: Text('5'), enabled: !recorder.isRecording),
+                          SegmentedButton<int>( style: SegmentedButton.styleFrom( backgroundColor: Colors.white, foregroundColor: Colors.deepPurple, selectedBackgroundColor: Colors.white30, selectedForegroundColor: Colors.amber),
+                          segments: <ButtonSegment<int>>[
+                            ButtonSegment<int>(value: 0, label: Text('.5'), enabled: !recorder.isRecording),
+                            ButtonSegment<int>(value: 1, label: Text('1'), enabled: !recorder.isRecording),
+                            ButtonSegment<int>(value: 2, label: Text('2'), enabled: !recorder.isRecording),
+                            ButtonSegment<int>(value: 3, label: Text('3'), enabled: !recorder.isRecording),
+                            ButtonSegment<int>(value: 4, label: Text('4'), enabled: !recorder.isRecording),
+                            ButtonSegment<int>(value: 5, label: Text('5'), enabled: !recorder.isRecording),
                           ],
-                          selected: <Duration>{selectedDuration},
-                          onSelectionChanged: (Set<Duration> newSelection) {
+                          selected: <int>{recorder.settings.loopRecordingDuration},
+                          onSelectionChanged: (Set<int> newSelection) {
 
                               setState(() {
                                 debugPrint('recorder.isRecording: ${recorder.isRecording}');
                                 if(!recorder.isRecording)
                                 {
-                                  debugPrint('BEFORE CHANGING VALUES');
-                                  debugPrint('newSelection: ${newSelection.first.inSeconds} seconds | loopTime: ${recorder.loopTime.inSeconds} seconds | selectedDuration: ${selectedDuration.inSeconds} seconds');
-                                  recorder.loopTime = newSelection.first;
-                                  selectedDuration = newSelection.first;
-                                  debugPrint('After CHANGING VALUES');
-                                  debugPrint('newSelection: ${newSelection.first.inSeconds} seconds | loopTime: ${recorder.loopTime.inSeconds} seconds | selectedDuration: ${selectedDuration.inSeconds} seconds');
-                                  
+
+                                  recorder.settings.loopRecordingDuration = newSelection.first;
+                                  recorder.settings.setParameter("loop_recording_duration", recorder.settings.loopRecordingDuration);
+                                  if(newSelection.first == 0)
+                                  {
+                                    recorder.loopTime = Duration(seconds: 30);
+                                  }
+                                  else{
+                                    recorder.loopTime = Duration(minutes: recorder.settings.loopRecordingDuration);
+                                  }
                                 }
                                 
                               });

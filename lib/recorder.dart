@@ -9,6 +9,7 @@ import 'package:camera/camera.dart';
 import 'package:toastification/toastification.dart';
 import 'package:flutter/material.dart';
 import 'utilities.dart';
+import 'package:ffmpeg_kit_flutter_new/ffmpeg_kit.dart';
 
 
 class Recorder{
@@ -74,7 +75,7 @@ class Recorder{
     recordedFile = await renameRecording( videoFile,camType );
     try{
       //Recompile using ffmpeg to insert timestamp in each frame
-      //TODO SOON
+      await addLiveTimestampAndReplace(recordedFile.path);
 
       if(settings.useExtStorage)
       { //use dart:io for external storage (SD card)
@@ -182,7 +183,76 @@ class Recorder{
     
   }
 
+  Future<void> addLiveTimestampAndReplace(String videoPath) async {
+  // 1. Establish the base metadata time before changing any files
+  DateTime baseDate = startTimeStamp;
+  int baseEpochSeconds = baseDate.millisecondsSinceEpoch ~/ 1000;
   
+  // 2. Generate a temporary path in the same directory to write to
+  String tempOutputPath = "${videoPath}_temp.mp4";
+
+  // 3. Define the filter and command (writing out to the temporary file)
+  String filter = "drawtext=fontfile='/system/fonts/Roboto-Regular.ttf':"
+                  "text='%{pts\\:localtime\\:$baseEpochSeconds\\:%Y-%m-%d %H\\\\\\:%M\\\\\\:%S}':"
+                  "x=10:y=10:fontsize=24:fontcolor=white:box=1:boxcolor=black@0.5";
+  List<String> arguments  = ['-y', '-i', videoPath, '-vf', filter];
+          
+  // 2. Dynamically swap codecs & bitrate constraints per OS platform
+  if (Platform.isAndroid) {
+    arguments.addAll([
+      '-pix_fmt', 'nv12',
+      '-c:v', 'h264_mediacodec', 
+      '-b:v', '10M',
+      '-g', '30'
+    ]);
+  } else if (Platform.isIOS) {
+    arguments.addAll([
+      '-c:v', 'h264_videotoolbox', 
+      '-b:v', '10M'
+    ]);
+  } else {
+    arguments.addAll([
+      '-c:v', 'libx264', 
+      '-preset', 'ultrafast', 
+      '-crf', '22'
+    ]);
+  }
+
+  arguments.addAll(['-c:a', 'copy', tempOutputPath]);
+  
+  
+  // 4. Run FFmpeg Kit
+  final session = await FFmpegKit.executeWithArguments(arguments);
+  final returnCode = await session.getReturnCode();
+  debugPrint('FFMPEG RETURNCODE: ${returnCode?.getValue()} ============================================================================================================================================================================');
+  if (returnCode?.isValueSuccess() == true) {
+    try {
+      // 5. Safely replace the old file with the new fild
+      final tempFile = File(tempOutputPath);
+
+      if (await tempFile.exists()) {
+        await tempFile.rename(videoPath); // Rename the temporary file to match original path
+      }
+      
+      
+      debugPrint("File successfully updated and replaced at: $videoPath");
+      
+    } catch (e) {
+      debugPrint("Error replacing original file: $e");
+    }
+  } else {
+    final failStackTrace = await session.getFailStackTrace();
+    debugPrint("FFmpeg encoding failed: $failStackTrace");
+    debugPrint('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%');
+    debugPrint("FFMPEG Logs: ${await session.getAllLogsAsString()}");
+    
+    // Clean up temp file if something went wrong during video processing
+    final tempFile = File(tempOutputPath);
+    if (await tempFile.exists()) {
+      await tempFile.delete();
+    }
+  }
+}
 
 
 }

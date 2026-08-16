@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 
+import 'package:flutter/material.dart';
 class StorageInfo
 {
 
@@ -62,6 +63,7 @@ class Settings{
   SharedPreferencesAsync prefs = SharedPreferencesAsync();
   bool useExtStorage = false; //SD Card
   Directory extStoragePath = Directory("");
+  int loopRecordingDuration = 0;
 
   void initializeSettings() async
   {
@@ -81,6 +83,10 @@ class Settings{
     {
       runInBackground = await prefs.getBool("enable_running_in_background") ?? false;
     }
+    if(await prefs.containsKey("loop_recording_duration"))
+    {
+      loopRecordingDuration = await prefs.getInt("loop_recording_duration") ?? 0;
+    }
 
   }
 
@@ -98,6 +104,10 @@ class Settings{
     {
       await prefs.setBool("use_external_storage", (value as bool));
     }
+    else if(key == "loop_recording_duration" && value is int )
+    {
+      await prefs.setInt("loop_recording_duration", (value as int));
+    }
   }
 
   Future<T> getParameter<T>(String key) async{
@@ -113,6 +123,10 @@ class Settings{
     {
       return await prefs.getBool("use_external_storage") as T;
     }
+    else if(key == "loop_recording_duration" )
+    {
+      return await prefs.getInt("loop_recording_duration") as T;
+    }
     else{
       return false as T;
     }
@@ -126,6 +140,8 @@ class Settings{
     {
       for(Directory d in directories)
       {
+        debugPrint("DETECTED FILEPATHS:");
+        debugPrint('Path: ${d.path}');
         if(!d.path.contains('emulated') && !d.path.contains('/storage/self'))
         {
           if(await d.exists())
