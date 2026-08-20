@@ -2,8 +2,10 @@ import 'package:disk_space_2/disk_space_2.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
-
+import 'package:photo_manager/photo_manager.dart';
 import 'package:flutter/material.dart';
+
+
 class StorageInfo
 {
 
@@ -13,12 +15,14 @@ class StorageInfo
   double freeDiskSpace = 0;
   double consumedSpace = 0;
   double mib_to_gb_convFactor = 0.001048576;
+  double consumedVideoSpace = 0;
 
   void fetchStorageInfo() async
   {
     totalDiskSpace = await updateStorageInfo("totalSpace", null);
     freeDiskSpace = await updateStorageInfo("freeSpace", null);
     consumedSpace = await updateStorageInfo("consumedSpace", null);
+    consumedVideoSpace = await fetchStoredVideoSize();
 
   }
 
@@ -49,6 +53,54 @@ class StorageInfo
 
 
     return double.parse((ret * mib_to_gb_convFactor).toStringAsFixed(2));
+  }
+
+  Future<double> fetchStoredVideoSize() async
+  {
+    double accumulatedSize = 0;
+    //Check permissions
+    PermissionState permission = await PhotoManager.requestPermissionExtend();
+    if(!permission.isAuth) return -1;
+
+    //Define Regex pattern
+    final RegExp fileNamePattern = RegExp(r'^\d+_\d+_\w+\.mp4$');
+
+    //Get all possible video locations
+    List<AssetPathEntity> videoLocations = await PhotoManager.getAssetPathList(type: RequestType.video);
+
+    //Iterate through each path
+    for(var videoPath in videoLocations)
+    {
+      //Get the number of assets or video files in each path
+      final numOfAssets = await videoPath.assetCountAsync;
+      //Get the list of assets or videos
+      List<AssetEntity> videoList = await videoPath.getAssetListRange(start: 0, end: numOfAssets, type: RequestType.video);
+
+      //Iterate through each video
+      for(var video in videoList)
+      {
+
+        //Check if the video is a dashcam video based on filename
+        var fileName = await video.titleAsync;
+        bool isDashCamVideo = fileNamePattern.hasMatch(fileName);
+
+        //If the video is a dashcam video, add the filesize to the running sum
+        if(await video.exists && video.type == AssetType.video &&  isDashCamVideo)
+        {
+          int fileSize = await video.fileSize;
+          accumulatedSize += fileSize.toDouble();
+        }
+        
+      }
+
+    }
+
+    //Convert the size from bytes to Gigabytes
+    accumulatedSize /= 1000000000;
+
+    //Return the total sum in gigabytes
+    return accumulatedSize;
+
   }
   
 }

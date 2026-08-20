@@ -1,8 +1,20 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://android.com">
+    
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CAMERA" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROCESSING" />
+
+    
     <application
         android:label="dashcam_app"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
+
+        <service 
+            android:name="id.flutter.flutter_background_service.BackgroundService"
+            android:foregroundServiceType="camera|location|mediaProcessing"
+            android:exported="true" />
         <activity
             android:name=".MainActivity"
             android:exported="true"

@@ -66,5 +66,22 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>location</string>
+		<string>audio</string>
+		<string>processing</string>
+	</array>
+	<key>NSCameraUsageDescription</key>
+	<string>This application requires access to the camera to record dashcam footage.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>This application requires access to the microphone to log vehicle audio.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>This app requires access to your GPS coordinates to track speed and location.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>This app tracks location patterns while recording in the background environment.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>This app requires access to save processed videos to your camera roll.</string>
+
 </dict>
 </plist>
