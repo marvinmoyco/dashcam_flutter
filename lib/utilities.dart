@@ -4,7 +4,7 @@ import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:flutter/material.dart';
-
+import 'package:camera/camera.dart';
 
 class StorageController
 {
@@ -119,6 +119,38 @@ class StorageController
     return accumulatedSize;
 
   }
+  
+  
+  Future<bool> maintainStorageLimit(XFile newRecordedVideo, double storageLimit ) async
+  {
+    //Get size of the new video recording
+    double newVideoSize =  (await newRecordedVideo.length()) / 1000000000;
+    //Get the total size of the videos stored in the gallery
+    double currentConsumedSpace = await fetchStoredVideoSize();
+
+    //Initialize boolean flag
+    bool isFileDeleted = false;
+
+    // If the combined space of the consumed and new recording exceeds the limit, then delete the old one until it becomes less
+    while((currentConsumedSpace + newVideoSize) >= storageLimit)
+    {
+      List<AssetEntity> videoList = await getRecordedVideos();
+
+      //Sort the list in descending order (Oldest video first)
+      videoList.sort((a,b) => a.createDateTime.compareTo(b.createDateTime));
+
+      List<String> deletedVideoIds = await PhotoManager.editor.deleteWithIds([videoList.first.id]);
+
+      if(deletedVideoIds.isNotEmpty)
+      {
+        isFileDeleted = true;
+      }
+      //Get the total size of the videos stored in the gallery
+      currentConsumedSpace = await fetchStoredVideoSize();
+    }
+    return isFileDeleted;
+  }
+
   
 
 }

@@ -132,12 +132,16 @@ class Recorder{
         {
           //Save the recording
           XFile originalFile = await camController.stopVideoRecording();
+
+          //Make sure that the total consumed space does not exceed the set limit
+          storageController.maintainStorageLimit(originalFile, settings.recordingStorageLimit);
+          
           //Update endTimeStamp and end stopwatch
           endTimeStamp = DateTime.now();
           queueSave(originalFile, "Rear"); 
 
           //Update storage info
-          storageInfo.fetchStorageInfo();
+          storageController.fetchStorageInfo();
         }
         
       }
@@ -160,14 +164,8 @@ class Recorder{
           //End the recording
           XFile originalFile = await camController.stopVideoRecording();
 
-          //Get the total size of the videos stored in the gallery
-          double currentConsumedSpace = await storageController.fetchStoredVideoSize();
-
-          //If the current consumed space + original video size is still within the storage limit
-          if(currentConsumedSpace > settings.recordingStorageLimit)
-          {
-
-          }
+          //Make sure that the total consumed space does not exceed the set limit
+          storageController.maintainStorageLimit(originalFile, settings.recordingStorageLimit);
 
           //Update endTimeStamp and end stopwatch
           endTimeStamp = DateTime.now();
@@ -177,9 +175,6 @@ class Recorder{
           storageController.fetchStorageInfo();
           
         }
-        
-        
-        
 
         //Start the recording
         startTimeStamp = DateTime.now();
