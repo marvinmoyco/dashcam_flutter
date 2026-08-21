@@ -4,7 +4,6 @@ import 'package:flutter/services.dart';
 import 'dart:io';
 import '../../main.dart';
 import '../../recorder.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:toastification/toastification.dart';
@@ -35,6 +34,14 @@ class _DashCamScreenState extends State<DashCamScreen> with WidgetsBindingObserv
   {
     scaffoldKey.currentState?.openEndDrawer();
     //setState(() => tonalSelected = !tonalSelected);
+  }
+
+  void togglePreview()
+  {
+    //Toggle the boolean flag depending on whether it is on or off;
+    setState(() => recorder.settings.isCameraPreviewEnabled = !recorder.settings.isCameraPreviewEnabled);
+    recorder.settings.setParameter("loop_recording_duration", recorder.settings.loopRecordingDuration);
+              
   }
   void onNewCameraSelected(CameraDescription camDesc) async {
     final prevCamController = controller;
@@ -152,7 +159,10 @@ class _DashCamScreenState extends State<DashCamScreen> with WidgetsBindingObserv
       backgroundColor: Colors.black,
       body: _isCameraInitialized ? Column(
         children:[
-          AspectRatio(aspectRatio: 1 / controller!.value.aspectRatio, child: Stack(children: [controller!.buildPreview(),
+          AspectRatio(aspectRatio: 1 / controller!.value.aspectRatio, child: Stack(children: [recorder.settings.isCameraPreviewEnabled ? controller!.buildPreview() : 
+          Container(color: Colors.black, 
+            child: Align( alignment: AlignmentGeometry.center,
+              child: Text("Camera preview is disabled. Press the camera button (top right) to enable preview.", textAlign: TextAlign.center,  style: TextStyle(color: Colors.white)))),
           Padding(padding: const EdgeInsets.fromLTRB(16, 8, 8, 8),
             child: Column(crossAxisAlignment: CrossAxisAlignment.center, 
                           children: [Row( mainAxisAlignment: .spaceBetween,
@@ -186,7 +196,21 @@ class _DashCamScreenState extends State<DashCamScreen> with WidgetsBindingObserv
                                 onPressed: openDrawer,
                               ))
              
-          ])]),
+          ]),
+          Row(mainAxisAlignment: .end,
+              children:[
+                Align(alignment: Alignment.bottomRight,
+                  child: IconButton.outlined(
+                                isSelected: recorder.settings.isCameraPreviewEnabled,
+                                icon: const Icon(Icons.camera_outlined),
+                                color: Colors.deepPurpleAccent,
+                                selectedIcon: const Icon(Icons.camera),
+                                onPressed: togglePreview
+                              )),
+
+              ])
+          
+          ]),
           ),
 
           ])),
@@ -215,13 +239,6 @@ class _DashCamScreenState extends State<DashCamScreen> with WidgetsBindingObserv
 
                                   recorder.settings.loopRecordingDuration = newSelection.first;
                                   recorder.settings.setParameter("loop_recording_duration", recorder.settings.loopRecordingDuration);
-                                  if(newSelection.first == 0)
-                                  {
-                                    recorder.loopTime = Duration(seconds: 30);
-                                  }
-                                  else{
-                                    recorder.loopTime = Duration(minutes: recorder.settings.loopRecordingDuration);
-                                  }
                                 }
                                 
                               });

@@ -16,7 +16,6 @@ class Recorder{
   //Initialize parameters
   late DateTime startTimeStamp;
   late DateTime endTimeStamp;
-  Duration loopTime = Duration(minutes: 3);
   late XFile recordedFile;
   String albumName = "DashCam_Recordings";
   late Timer recordingTimer;
@@ -135,7 +134,7 @@ class Recorder{
 
           //Make sure that the total consumed space does not exceed the set limit
           storageController.maintainStorageLimit(originalFile, settings.recordingStorageLimit);
-          
+
           //Update endTimeStamp and end stopwatch
           endTimeStamp = DateTime.now();
           queueSave(originalFile, "Rear"); 
@@ -155,6 +154,9 @@ class Recorder{
       startTimeStamp = DateTime.now();
       await camController!.prepareForVideoRecording();
       await camController.startVideoRecording();
+
+      //Get the duration
+      Duration loopTime = settings.getloopRecordingDuration();
 
       //Re-initialize timer
       recordingTimer = Timer.periodic(loopTime, (timer) async{
@@ -178,8 +180,8 @@ class Recorder{
 
         //Start the recording
         startTimeStamp = DateTime.now();
-        camController.prepareForVideoRecording();
-        camController.startVideoRecording();
+        await camController.prepareForVideoRecording();
+        await camController.startVideoRecording();
       });
     }
     

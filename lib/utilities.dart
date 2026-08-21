@@ -166,6 +166,7 @@ class Settings{
   bool useExtStorage = false; //SD Card
   Directory extStoragePath = Directory("");
   int loopRecordingDuration = 0;
+  bool isCameraPreviewEnabled = false;
 
   void initializeSettings() async
   {
@@ -173,6 +174,11 @@ class Settings{
     if(await prefs.containsKey("storage_limit"))
     {
       recordingStorageLimit = await prefs.getDouble("storage_limit") ?? 0.00;
+    }
+
+    if(await prefs.containsKey("camera_preview_enabled"))
+    {
+      isCameraPreviewEnabled = await prefs.getBool("camera_preview_enabled") ?? false;
     }
 
 
@@ -192,11 +198,24 @@ class Settings{
 
   }
 
-
+  Duration getloopRecordingDuration()
+  {
+    if(loopRecordingDuration == 0)
+    {
+      return Duration(seconds: 30);
+    }
+    else{
+      return Duration(minutes: loopRecordingDuration);
+    }
+  }
   void setParameter<T>(String key, T value) async{
     if(key == "storage_limit" && value is double)
     {
       await prefs.setDouble("storage_limit", (value as double));
+    }
+    else if(key == "camera_preview_enabled" && value is bool)
+    {
+      await prefs.setBool("camera_preview_enabled", (value as bool));
     }
     else if(key == "enable_running_in_background" && value is bool )
     {
@@ -216,6 +235,10 @@ class Settings{
     if(key == "storage_limit")
     {
       return await prefs.getDouble("storage_limit") as T;
+    }
+    else if(key == "camera_preview_enabled")
+    {
+      return await prefs.getBool("camera_preview_enabled") as T;
     }
     else if(key == "enable_running_in_background" )
     {
