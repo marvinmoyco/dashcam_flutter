@@ -6,16 +6,18 @@ import 'package:photo_manager/photo_manager.dart';
 import 'package:flutter/material.dart';
 
 
-class StorageInfo
+class StorageController
 {
 
-  StorageInfo();
+  StorageController();
 
   double totalDiskSpace = 0;
   double freeDiskSpace = 0;
   double consumedSpace = 0;
-  double mib_to_gb_convFactor = 0.001048576;
+  double mibToGibConvFactor = 0.001048576;
   double consumedVideoSpace = 0;
+  RegExp fileNamePattern = RegExp(r'^\d+_\d+_\w+\.mp4$');
+
 
   void fetchStorageInfo() async
   {
@@ -44,26 +46,25 @@ class StorageInfo
     }
     else if(type == "specificSpace" )
     {
-      final dir_path = Directory(pathStr ?? "");
-      if(await dir_path.exists())
+      final dirPath = Directory(pathStr ?? "");
+      if(await dirPath.exists())
       {
         ret = await DiskSpace.getFreeDiskSpaceForPath(pathStr ?? "") ?? 0;
       }
     }
 
 
-    return double.parse((ret * mib_to_gb_convFactor).toStringAsFixed(2));
+    return double.parse((ret * mibToGibConvFactor).toStringAsFixed(2));
   }
 
-  Future<double> fetchStoredVideoSize() async
-  {
-    double accumulatedSize = 0;
+  Future<List<AssetEntity>> getRecordedVideos() async{
+
+    //initialize return value
+    List<AssetEntity> videoList = [];
+
     //Check permissions
     PermissionState permission = await PhotoManager.requestPermissionExtend();
-    if(!permission.isAuth) return -1;
-
-    //Define Regex pattern
-    final RegExp fileNamePattern = RegExp(r'^\d+_\d+_\w+\.mp4$');
+    if(!permission.isAuth) return videoList;
 
     //Get all possible video locations
     List<AssetPathEntity> videoLocations = await PhotoManager.getAssetPathList(type: RequestType.video);
@@ -74,25 +75,41 @@ class StorageInfo
       //Get the number of assets or video files in each path
       final numOfAssets = await videoPath.assetCountAsync;
       //Get the list of assets or videos
-      List<AssetEntity> videoList = await videoPath.getAssetListRange(start: 0, end: numOfAssets, type: RequestType.video);
-
-      //Iterate through each video
-      for(var video in videoList)
+      List<AssetEntity> tempVideoList = await videoPath.getAssetListRange(start: 0, end: numOfAssets, type: RequestType.video);
+      for(var video in tempVideoList)
       {
-
-        //Check if the video is a dashcam video based on filename
-        var fileName = await video.titleAsync;
-        bool isDashCamVideo = fileNamePattern.hasMatch(fileName);
-
-        //If the video is a dashcam video, add the filesize to the running sum
-        if(await video.exists && video.type == AssetType.video &&  isDashCamVideo)
+        //If a valid dashcam recording, save into the list to be returned
+        if(fileNamePattern.hasMatch(await video.titleAsync) && await video.exists && video.type == AssetType.video)
         {
-          int fileSize = await video.fileSize;
-          accumulatedSize += fileSize.toDouble();
+          videoList.add(video);
         }
-        
       }
+    }
 
+    return videoList;
+
+  }
+
+  Future<double> fetchStoredVideoSize() async
+  {
+    double accumulatedSize = 0;
+
+    List<AssetEntity> videoList = await getRecordedVideos();
+
+    //Iterate through each video
+    for(var video in videoList)
+    {
+      //Check if the video is a dashcam video based on filename
+      var fileName = await video.titleAsync;
+      bool isDashCamVideo = fileNamePattern.hasMatch(fileName);
+
+      //If the video is a dashcam video, add the filesize to the running sum
+      if(await video.exists && video.type == AssetType.video &&  isDashCamVideo)
+      {
+        int fileSize = await video.fileSize;
+        accumulatedSize += fileSize.toDouble();
+      }
+      
     }
 
     //Convert the size from bytes to Gigabytes
@@ -103,6 +120,7 @@ class StorageInfo
 
   }
   
+
 }
 
 

@@ -107,10 +107,10 @@ class _DashCamScreenState extends State<DashCamScreen> with WidgetsBindingObserv
     //Hide the system status bar
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
     onNewCameraSelected(cameraList[0]);
-    recorder.storageInfo.fetchStorageInfo();
-    if(recorder.storageInfo.consumedSpace > recorder.settings.recordingStorageLimit)
+    recorder.storageController.fetchStorageInfo();
+    if(recorder.storageController.consumedSpace > recorder.settings.recordingStorageLimit)
     {
-      setState(() => recorder.settings.setParameter("storage_limit", recorder.storageInfo.consumedSpace));
+      setState(() => recorder.settings.setParameter("storage_limit", recorder.storageController.consumedSpace));
     }
     recorder.settings.initializeSettings();
 
@@ -239,11 +239,11 @@ class _DashCamScreenState extends State<DashCamScreen> with WidgetsBindingObserv
           NavigationDrawerDestination(icon: Icon(Icons.settings), label: Text("Settings")),
           Padding(padding: .fromLTRB(28, 16, 28, 10), child: Divider()),
           //Place settings here
-          Padding(padding: .fromLTRB(28,10,16, 10), child: Text('Storage Capacity: ${recorder.storageInfo.consumedSpace} GB of ${recorder.storageInfo.totalDiskSpace} GB used (${recorder.storageInfo.freeDiskSpace} GB free)')),
-          Padding(padding: .fromLTRB(28,10,16, 10), child: Text('Storage Limit: ${recorder.storageInfo.consumedVideoSpace.toStringAsFixed(2)} GB of ${recorder.settings.recordingStorageLimit.toStringAsFixed(2)}  used')),
-          Slider(value: recorder.settings.recordingStorageLimit, min: 0, max: recorder.storageInfo.freeDiskSpace, label: recorder.settings.recordingStorageLimit.toStringAsFixed(2), onChanged: (double newVal){ setState(()
+          Padding(padding: .fromLTRB(28,10,16, 10), child: Text('Storage Capacity: ${recorder.storageController.consumedSpace} GB of ${recorder.storageController.totalDiskSpace} GB used (${recorder.storageController.freeDiskSpace} GB free)')),
+          Padding(padding: .fromLTRB(28,10,16, 10), child: Text('Storage Limit: ${recorder.storageController.consumedVideoSpace.toStringAsFixed(2)} GB of ${recorder.settings.recordingStorageLimit.toStringAsFixed(2)}  used')),
+          Slider(value: recorder.settings.recordingStorageLimit, min: 0, max: recorder.storageController.freeDiskSpace, label: recorder.settings.recordingStorageLimit.toStringAsFixed(2), onChanged: (double newVal){ setState(()
           {
-            if(newVal >= recorder.storageInfo.consumedVideoSpace)
+            if(newVal >= recorder.storageController.consumedVideoSpace)
             {
               recorder.settings.recordingStorageLimit = newVal;
               recorder.settings.setParameter("storage_limit", recorder.settings.recordingStorageLimit);

@@ -22,7 +22,7 @@ class Recorder{
   late Timer recordingTimer;
   bool isRecording = false;
   final List<Future<void>> pendingSaves = [];
-  StorageInfo storageInfo = StorageInfo();
+  StorageController storageController = StorageController();
   Settings settings = Settings();
 
 
@@ -161,7 +161,7 @@ class Recorder{
           XFile originalFile = await camController.stopVideoRecording();
 
           //Get the total size of the videos stored in the gallery
-          double currentConsumedSpace = await storageInfo.fetchStoredVideoSize();
+          double currentConsumedSpace = await storageController.fetchStoredVideoSize();
 
           //If the current consumed space + original video size is still within the storage limit
           if(currentConsumedSpace > settings.recordingStorageLimit)
@@ -174,7 +174,7 @@ class Recorder{
           queueSave(originalFile, "Rear"); 
 
           //Update storage info
-          storageInfo.fetchStorageInfo();
+          storageController.fetchStorageInfo();
           
         }
         
